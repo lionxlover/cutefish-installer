@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cutefish OS Installer</title>
+<style>
+    /* The Cutefish Installer's window, in the toolkit's own tokens:
+       the settings app's shapes and colours, the wizard the C++ window
+       walks, the same steps, the same words. */
+    :root {
+        --bg: #F5F6FA;
+        --card: #FFFFFF;
+        --alt: #F2F4F5;
+        --text: #323238;
+        --disabled: #64646E;
+        --separator: rgba(100, 100, 110, 0.10);
+        --accent: #3385FF;
+        --green: #35BF56;
+        --purple: #8266FF;
+        --pink: #CA64AC;
+        --orange: #FEA042;
+        --grey: #4F596B;
+        --rowhover: rgba(50, 50, 56, 0.04);
+        --shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+    }
+    [data-theme="dark"] {
+        --bg: #1C1C1D;
+        --card: #2C2C2D;
+        --alt: #3C3C3D;
+        --text: #FFFFFF;
+        --disabled: #888888;
+        --separator: rgba(255, 255, 255, 0.08);
+        --rowhover: rgba(255, 255, 255, 0.05);
+        --shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: "Noto Sans", "Inter", -apple-system, "Segoe UI", sans-serif;
+        background:
+            radial-gradient(1200px 700px at 20% 10%, rgba(51, 133, 255, 0.10), transparent 60%),
+            radial-gradient(900px 600px at 85% 90%, rgba(130, 102, 255, 0.08), transparent 55%),
+            #232529;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+        padding: 32px 12px;
+        color: var(--text);
+    }
+
+    /* -- the window ------------------------------------------------------ */
+    .window {
+        width: 900px;
+        height: 640px;
+        min-width: 900px;
+        background: var(--bg);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        transition: background 0.3s;
+    }
+    .window-inner { display: flex; flex: 1; min-height: 0; }
+
+    /* the header, 40 px, the page's name from the sidebar's edge */
+    .header {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    .header .title {
+        margin-left: 239px;
+        font-size: 14.67px;
+        font-weight: 600;
+        flex: 1;
+    }
+    .header .buttons { display: flex; margin-right: 8px; }
+    .header .winbutton {
+        width: 32px; height: 32px;
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--disabled);
+        cursor: default;
+    }
+    .header .winbutton:hover { background: var(--rowhover); color: var(--text); }
+    .header .winbutton.close:hover { background: #FF5C6D; color: #fff; }
+
+    /* -- the sidebar ------------------------------------------------------ */
+    .sidebar {
+        width: 230px;
+        flex-shrink: 0;
+        background: rgba(120, 120, 128, 0.09);
+        padding: 8px 12px 12px;
+        display: flex;
+        flex-direction: column;
+    }
+    [data-theme="dark"] .sidebar { background: rgba(255, 255, 255, 0.045); }
+    .sidebar .appname {
+        height: 32px;
+        display: flex; align-items: center;
+        padding-left: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+    .sidebar .steps { display: flex; flex-direction: column; gap: 2px; }
+    .step {
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        font-size: 13.3px;
+        color: var(--disabled);
+        cursor: pointer;
+        position: relative;
+    }
+    .step .tile {
+        width: 24px; height: 24px;
+        border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .step .tile svg { width: 16px; height: 16px; }
+    .step.current { background: var(--rowhover); color: var(--text); }
+    .step.done { color: var(--text); }
+    .step.done .tile::after {
+        content: '';
+        position: absolute;
+        width: 14px; height: 14px;
+        left: 22px; top: 2px;
+        border-radius: 7px;
+        background: var(--green);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+        background-size: 10px;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    .step .tick {
+        position: absolute;
+        left: 22px; top: 2px;
+        width: 14px; height: 14px;
+        border-radius: 7px;
+        background: var(--green);
+        display: none;
+    }
+
+    /* -- the page --------------------------------------------------------- */
+    .page {
+        flex: 1;
+        min-width: 0;
+        padding: 16px 24px 0;
+        overflow-y: auto;
+        display: none;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .page.active { display: flex; }
+    .page::-webkit-scrollbar { width: 6px; }
+    .page::-webkit-scrollbar-thumb { background: var(--separator); border-radius: 3px; }
+
+    .subtitle {
+        font-size: 13.3px;
+        color: var(--disabled);
+        line-height: 1.45;
+        padding: 0 16px;
+    }
+    .section { display: flex; flex-direction: column; gap: 8px; }
+    .section > .label {
+        font-size: 13.3px;
+        color: var(--disabled);
+        padding: 0 16px;
+    }
+
+    .card {
+        background: var(--card);
+        border-radius: 12px;
+    }
+    .card.padded { padding: 16px 12px; }
+    .card.tight { padding: 0; }
+
+    /* rows: 44 one line, 56 two */
+    .row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        min-height: 56px;
+        position: relative;
+        cursor: pointer;
+    }
+    .row.one { min-height: 44px; }
+    .row + .row::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 16px; right: 16px;
+        height: 1px;
+        background: var(--separator);
+    }
+    .row:hover { background: var(--rowhover); }
+    .row.selected { background: var(--rowhover); }
+    .row .ricon { width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .row .ricon svg { width: 22px; height: 22px; }
+    .row .rtext { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .row .rtitle { font-size: 13.3px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row .rsub { font-size: 11.3px; color: var(--disabled); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row .rcheck {
+        width: 16px; height: 16px;
+        flex-shrink: 0;
+        color: var(--accent);
+        opacity: 0;
+        transform: scale(0.6);
+        transition: all 0.15s;
+    }
+    .row.selected .rcheck { opacity: 1; transform: scale(1); }
+</style>
+<style>
+    /* controls: the toolkit's own switch, checkbox, combobox, field */
+    .switch {
+        width: 40px; height: 22px;
+        border-radius: 11px;
+        background: var(--separator);
+        background: color-mix(in srgb, var(--text) 20%, transparent);
+        position: relative;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.2s;
+    }
+    .switch::after {
+        content: '';
+        position: absolute;
+        width: 18px; height: 18px;
+        left: 2px; top: 2px;
+        border-radius: 9px;
+        background: #FFFFFF;
+        transition: transform 0.2s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .switch.on { background: var(--accent); }
+    .switch.on::after { transform: translateX(18px); }
+
+    .check {
+        width: 18px; height: 18px;
+        border-radius: 5px;
+        background: var(--accent);
+        position: relative;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .check::after {
+        content: '';
+        position: absolute; inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
+        background-size: 12px;
+        background-position: center;
+        background-repeat: no-repeat;
+        transform: scale(0.5);
+        opacity: 0;
+        transition: all 0.15s;
+    }
+    .check.on::after { transform: scale(1); opacity: 1; }
+    .check.off { background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text) 35%, transparent); }
+
+    .combo {
+        min-width: 170px;
+        height: 32px;
+        padding: 0 10px;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--text) 6%, transparent);
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        font-size: 13.3px;
+        cursor: pointer;
+        position: relative;
+    }
+    .combo .chev { width: 14px; height: 14px; color: var(--disabled); }
+    .combo .menu {
+        display: none;
+        position: absolute;
+        top: 38px; left: 0; right: 0;
+        background: var(--card);
+        border-radius: 10px;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+        padding: 6px;
+        z-index: 30;
+    }
+    .combo.open .menu { display: block; }
+    .combo .menu .item {
+        height: 32px;
+        border-radius: 6px;
+        display: flex; align-items: center;
+        padding: 0 10px;
+        color: var(--text);
+    }
+    .combo .menu .item:hover { background: var(--rowhover); }
+    .combo .menu .item.chosen { color: var(--accent); }
+
+    .field {
+        height: 36px;
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--text) 6%, transparent);
+        border: none;
+        padding: 0 12px;
+        font-size: 13.3px;
+        font-family: inherit;
+        color: var(--text);
+        outline: none;
+        width: 100%;
+    }
+    .field:focus { box-shadow: inset 0 0 0 1.5px var(--accent); }
+    .field::placeholder { color: var(--disabled); opacity: 0.7; }
+
+    .formrow {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        min-height: 56px;
+        position: relative;
+    }
+    .formrow + .formrow::before, .row + .formrow::before, .formrow + .row::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 16px; right: 16px;
+        height: 1px;
+        background: var(--separator);
+    }
+    .formrow .ftext { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .formrow .ftitle { font-size: 13.3px; }
+    .formrow .fsub { font-size: 11.3px; color: var(--disabled); }
+
+    .accountfield { display: flex; flex-direction: column; gap: 6px; padding: 6px 16px; }
+    .accountfield label { font-size: 11.3px; color: var(--disabled); }
+
+    /* the disk bar */
+    .diskbar {
+        height: 52px;
+        border-radius: 10px;
+        background: var(--card);
+        display: flex;
+        position: relative;
+        overflow: hidden;
+    }
+    .diskbar .stretch {
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        border-right: 1px solid var(--card);
+    }
+    .diskbar .stretch.free { background: var(--card); color: var(--disabled); justify-content: flex-start; padding-left: 10px; }
+
+    /* the review's value rows */
+    .valuerow { padding: 0 16px; min-height: 44px; display: flex; align-items: center; justify-content: space-between; position: relative; }
+    .valuerow + .valuerow::before { content: ''; position: absolute; top: 0; left: 16px; right: 16px; height: 1px; background: var(--separator); }
+    .valuerow .k { font-size: 13.3px; color: var(--disabled); }
+    .valuerow .v { font-size: 13.3px; color: var(--text); }
+
+    /* the install page */
+    .progress { height: 6px; border-radius: 3px; background: color-mix(in srgb, var(--text) 12%, transparent); overflow: hidden; }
+    .progress .fill { height: 100%; width: 0%; border-radius: 3px; background: var(--accent); transition: width 0.25s; }
+    .installgrid { display: flex; flex-direction: column; gap: 10px; padding: 16px 12px; }
+    .stepline { font-size: 14.67px; font-weight: 600; }
+    .statusline { font-size: 12.6px; color: var(--disabled); min-height: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .logcard {
+        background: var(--card);
+        border-radius: 12px;
+        padding: 10px 16px;
+        height: 240px;
+        overflow-y: auto;
+        font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace;
+        font-size: 11.3px;
+        line-height: 1.55;
+        color: var(--disabled);
+    }
+    .logcard .lline { white-space: pre-wrap; word-break: break-all; }
+    .logcard .lstep { color: var(--accent); font-weight: 600; margin-top: 4px; }
+
+    /* the done page */
+    .donepage { align-items: center; justify-content: center; text-align: center; gap: 16px; }
+    .badge {
+        width: 80px; height: 80px;
+        border-radius: 40px;
+        background: var(--accent);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .donetitle { font-size: 21.3px; font-weight: 600; }
+    .donewords { font-size: 13.3px; color: var(--disabled); line-height: 1.55; max-width: 520px; }
+
+    /* the footer */
+    .footer {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 0 24px 8px;
+        flex-shrink: 0;
+    }
+    .btn {
+        height: 32px;
+        min-width: 64px;
+        border-radius: 16px;
+        padding: 0 16px;
+        font-size: 13.3px;
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        background: color-mix(in srgb, var(--text) 8%, transparent);
+        color: var(--text);
+    }
+    .btn:hover { background: color-mix(in srgb, var(--text) 14%, transparent); }
+    .btn.primary { background: var(--accent); color: #fff; }
+    .btn.primary:hover { filter: brightness(1.08); }
+    .btn.primary:disabled { background: color-mix(in srgb, var(--text) 10%, transparent); color: var(--disabled); cursor: not-allowed; filter: none; }
+    .btn.danger { background: #FF5C6D; color: #fff; }
+    .btn.hidden { display: none; }
+
+    /* the confirm dialog */
+    .overlay {
+        position: absolute; inset: 0;
+        background: rgba(0, 0, 0, 0.35);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        border-radius: 14px;
+    }
+    .overlay.show { display: flex; }
+    .dialog {
+        width: 360px;
+        background: var(--card);
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+    }
+    .dialog .dtitle { font-size: 14.67px; font-weight: 600; }
+    .dialog .dtext { font-size: 13.3px; color: var(--disabled); line-height: 1.5; }
+    .dialog .drow { display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* the toast */
+    .toast {
+        position: absolute;
+        bottom: 72px; left: 50%;
+        transform: translateX(-50%) translateY(8px);
+        background: color-mix(in srgb, var(--card) 92%, var(--text) 8%);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 18px;
+        font-size: 13.3px;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.25s;
+        z-index: 60;
+        max-width: 620px;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .below { color: #cfd3da; font-size: 13px; font-family: "Noto Sans", sans-serif; text-align: center; line-height: 1.6; }
+    .below b { color: #fff; }
+    .themebtn { position: fixed; top: 14px; right: 16px; z-index: 100; }
+</style>
+</head>
+<body>
+<style>
+    /* the few pieces the pages themselves bring */
+    .eula { display: flex; flex-direction: column; gap: 10px; }
+    .eula p { font-size: 13.3px; color: var(--disabled); line-height: 1.55; margin: 0; }
+    .themebtn { background: rgba(255, 255, 255, 0.14); color: #fff; border: none; border-radius: 16px;
+                height: 32px; padding: 0 16px; font-family: inherit; font-size: 13.3px; cursor: pointer; }
+    .themebtn:hover { background: rgba(255, 255, 255, 0.26); }
+    .combo .menu.zones { max-height: 224px; overflow-y: auto; }
+    .combo .menu.zones::-webkit-scrollbar { width: 6px; }
+    .combo .menu.zones::-webkit-scrollbar-thumb { background: var(--separator); border-radius: 3px; }
+    svg { display: block; }
+</style>
+
+<button class="themebtn" id="themebtn" onclick="toggleTheme()">Dark mode</button>
+
+<div class="window">
+
+    <!-- the header: the step's name from the sidebar's edge, the window's buttons at the end -->
+    <div class="header">
+        <div class="title" id="headtitle">Language</div>
+        <div class="buttons">
+            <div class="winbutton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 12.5H17" stroke="currentColor"/></svg></div>
+            <div class="winbutton"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="7.5" y="7.5" width="9" height="9" rx="1.5" stroke="currentColor"/></svg></div>
+            <div class="winbutton close"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.25 7.25L16.75 16.75M16.75 7.25L7.25 16.75" stroke="currentColor" stroke-width="1.3"/></svg></div>
+        </div>
+    </div>
+
+    <div class="window-inner">
+
+        <!-- the sidebar of steps, as the settings app's own sidebar -->
+        <aside class="sidebar">
+            <div class="appname">Install Cutefish OS</div>
+            <div class="steps" id="steps"></div>
+        </aside>
+
+        <!-- 0 · Language -->
+        <div class="page active" id="page-0">
+            <div class="subtitle">Choose the language the installed system uses. It can be changed later in the settings.</div>
+            <div class="card tight" id="langlist"></div>
+        </div>
+
+        <!-- 1 · Keyboard -->
+        <div class="page" id="page-1">
+            <div class="subtitle">Choose the layout of this keyboard. It can be changed later in the settings.</div>
+            <div class="card tight" id="kblist"></div>
+        </div>
+
+        <!-- 2 · Agreement -->
+        <div class="page" id="page-2">
+            <div class="subtitle">Please read the agreement. The install goes on only after it is accepted.</div>
+            <div class="card padded eula" id="eula">
+                <p>Cutefish OS is free software: most of it is licensed under the GNU General Public License and other free licenses, with the source there for anyone to read, change and share, under the terms those licenses set out.</p>
+                <p>The system comes as it is, with no warranty of any kind. The people who make it cannot be held responsible for what happens to files, machines or anything else while it is used.</p>
+                <p>A few services of the desktop can reach the internet: the weather, the maps, the time, the updates. The privacy choices two steps ahead decide which of them the installed system starts with, and every one of them can be turned on or off at any time, in the settings.</p>
+                <p>Installing erases and writes disks. Nothing the installer does is hidden: the page before the work itself shows exactly what will be done, and the work only starts after the agreement below.</p>
+                <p>By choosing Continue you accept all of the above.</p>
+            </div>
+            <div class="card tight">
+                <div class="formrow" style="cursor:pointer" onclick="toggleAgree()">
+                    <div class="ftext"><div class="ftitle">I have read and agree</div></div>
+                    <div class="check off" id="agreecheck"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3 · Disk -->
+        <div class="page" id="page-3">
+            <div class="subtitle">Choose the disk Cutefish OS is installed on. The installer never offers the disk the live session itself runs from.</div>
+            <div class="section"><div class="label">The disk</div><div class="card tight" id="disklist"></div></div>
+            <div class="section"><div class="label">The chosen disk</div><div class="diskbar" id="diskbar"></div></div>
+            <div class="section"><div class="label">How</div><div class="card tight" id="howlist"></div></div>
+            <div class="section" id="mountsection" style="display:none"><div class="label">Mount points</div><div class="card tight" id="mountlist"></div></div>
+        </div>
+
+        <!-- 4 · Users -->
+        <div class="page" id="page-4">
+            <div class="subtitle">The account this machine starts with, and its own name on the network.</div>
+            <div class="section"><div class="label">Your account</div>
+                <div class="card padded">
+                    <div class="accountfield"><label>Full name</label><input class="field" id="f-name" placeholder="ex. John Doe" oninput="userEdited()"></div>
+                    <div class="accountfield"><label>Username</label><input class="field" id="f-user" placeholder="john" oninput="usernameEdited()"></div>
+                    <div class="accountfield"><label>The computer's name</label><input class="field" id="f-host" value="cutefish-pc" oninput="userEdited()"></div>
+                </div>
+            </div>
+            <div class="section"><div class="label">The password</div>
+                <div class="card padded">
+                    <div class="accountfield"><label>Password</label><input class="field" type="password" id="f-pass" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" oninput="userEdited()"></div>
+                    <div class="accountfield"><label>Confirm the password</label><input class="field" type="password" id="f-pass2" placeholder="The same password again" oninput="userEdited()"></div>
+                    <div class="accountfield"><label id="userhint" style="display:none"></label></div>
+                </div>
+            </div>
+            <div class="section"><div class="label">Where this machine is</div>
+                <div class="card tight">
+                    <div class="formrow">
+                        <div class="ftext"><div class="ftitle">Time zone</div><div class="fsub">The clock follows it, and the calendar with the sun.</div></div>
+                        <div class="combo" id="zonecombo"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5 · Privacy -->
+        <div class="page" id="page-5">
+            <div class="subtitle">What the installed system may reach, to begin with. Every one of these can be changed later, in the settings.</div>
+            <div class="card tight">
+                <div class="formrow"><div class="ftext"><div class="ftitle">Location services</div><div class="fsub">Apps may ask where this machine is, for the weather and the maps.</div></div><div class="switch" id="sw-location" onclick="togglePrivacy(this, 'location')"></div></div>
+                <div class="formrow"><div class="ftext"><div class="ftitle">Diagnostic reports</div><div class="fsub">The desktop's makers learn how it runs, with nothing of your files or your work in it.</div></div><div class="switch" id="sw-diagnostics" onclick="togglePrivacy(this, 'diagnostics')"></div></div>
+                <div class="formrow"><div class="ftext"><div class="ftitle">Tailored suggestions</div><div class="fsub">The stores and the start page may suggest by what this machine is used for.</div></div><div class="switch" id="sw-tailored" onclick="togglePrivacy(this, 'tailored')"></div></div>
+            </div>
+        </div>
+
+        <!-- 6 · Review -->
+        <div class="page" id="page-6">
+            <div class="subtitle">Everything the install will do, in one place. The work starts only from here.</div>
+            <div class="card tight" id="reviewlist"></div>
+            <div class="subtitle" id="reviewnote"></div>
+        </div>
+
+        <!-- 7 · Install -->
+        <div class="page" id="page-7">
+            <div class="subtitle">Cutefish OS is being installed. Keep the machine on, and give it the time it asks for.</div>
+            <div class="card padded installgrid">
+                <div class="stepline" id="steplabel">Starting&#8230;</div>
+                <div class="progress"><div class="fill" id="progressbar"></div></div>
+                <div class="statusline" id="statusline"></div>
+            </div>
+            <div class="section"><div class="label">The work itself</div><div class="logcard" id="log"></div></div>
+        </div>
+
+        <!-- 8 · Done -->
+        <div class="page donepage" id="page-8">
+            <div class="badge"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="donetitle">Cutefish OS is installed.</div>
+            <div class="donewords">Take the disk or the stick the machine started from out, and restart.<br>Everything you chose &#8212; the language, the keyboard, the account &#8212; is already set up, and the desktop walks the rest of the way in with you.</div>
+        </div>
+
+    </div>
+
+    <!-- the footer: the dialog's own buttons, at the end of the line -->
+    <div class="footer">
+        <button class="btn hidden" id="btn-back" onclick="backClicked()">Back</button>
+        <button class="btn primary" id="btn-next" onclick="nextClicked()">Continue</button>
+        <button class="btn hidden" id="btn-stop" onclick="stopClicked()">Stop</button>
+    </div>
+
+    <!-- the last honest warning, before the work itself -->
+    <div class="overlay" id="overlay">
+        <div class="dialog">
+            <div class="dtitle" id="dlg-title"></div>
+            <div class="dtext" id="dlg-text"></div>
+            <div class="drow">
+                <button class="btn" id="dlg-cancel" onclick="closeConfirm()">Cancel</button>
+                <button class="btn danger" id="dlg-ok">Install</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+</div>
+
+<div class="below">A browser-drawn preview of <b>cutefish-installer</b>, the installer of <b>Cutefish OS</b> &#8212; the same window the native one builds on cutefish-toolkit, the same steps, the same words, the same work done by <b>cutefish-installerctl</b>. This page simulates an install: no disk is touched.</div>
+
+<script>
+// The installer's own world, in a browser: the same tables src/core/tables.cpp
+// holds, the same rules util.cpp checks, the same steps and words the C++
+// window walks. Nothing here touches a disk; the work itself belongs to
+// cutefish-installerctl, whose record this page imitates.
+
+"use strict";
+
+// -- the glyphs -------------------------------------------------------------
+// The theme's own symbolic icons, their ink turned to currentColor so they
+// sit white on the sidebar's tiles and grey in the rows, as the toolkit
+// paints them.
+const ICONS = {
+locale: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="m10.469 2h1.062l2.237 6h-1.04l-0.628-1.8h-2.217l-0.62 1.8h-1.03zm0.531 0.99-0.912 2.61h1.807z"/><path d="m8 0c-1.108 0-2 0.892-2 2v6c0 1.108 0.892 2 2 2h6c1.108 0 2-0.892 2-2v-6c0-1.108-0.892-2-2-2h-6zm0 1h6c0.554 0 1 0.446 1 1v6c0 0.554-0.446 1-1 1h-6c-0.554 0-1-0.446-1-1v-6c0-0.554 0.446-1 1-1z"/><path d="m3.8711 7.498c-0.061452 0.008-0.10903 0.059-0.11328 0.121-2e-3 0.028-0.0094 0.105-0.0234 0.227-0.023 0.195-0.0436 0.36-0.0566 0.498l-0.0234 0.258v2e-3l-6e-3 0.064c-0.493 0.04-0.987 0.04-1.481 4e-3 -0.0807-7e-3 -0.148 0.062-0.141 0.143l0.055 0.572c7e-3 0.062 0.059 0.111 0.121 0.115 0.09 6e-3 0.204 8e-3 0.35 8e-3 0.345-2e-3 0.689-0.016 1.033-0.041-0.03 0.387-0.054 0.744-0.061 1.055-0.204 0.109-0.4 0.23-0.59 0.363l-2e-3 2e-3c-0.846 0.637-1.289 1.374-1.289 2.191 0 0.303 0.064 0.551 0.213 0.725 0.15 0.175 0.377 0.26 0.645 0.26 0.383 0 0.78-0.158 1.189-0.414 0.019 0.12 0.04 0.241 0.061 0.361 0.014 0.081 0.097 0.129 0.174 0.1l0.592-0.221c0.062-0.024 0.095-0.09 0.078-0.154-0.063-0.237-0.103-0.465-0.127-0.688 0.641-0.617 1.165-1.381 1.572-2.291-0.327-0.178-0.598-0.444-0.781-0.768-0.317 0.043-0.61 0.101-0.873 0.182 0.011-0.272 0.025-0.531 0.049-0.771 0.203-0.022 0.393-0.054 0.59-0.082-0.017-0.104-0.026-0.21-0.026-0.318v-0.481c-0.16 0.025-0.32 0.054-0.48 0.074 0.029-0.277 0.06-0.568 0.103-0.908 8e-3 -0.073-0.046-0.139-0.119-0.145l-0.607-0.043c-9e-3 -1e-3 -0.017-1e-3 -0.026 0zm1.248 3.23c-0.21 0.451-0.458 0.849-0.74 1.209-0.013-0.288-0.024-0.584-0.025-0.994 0.246-0.095 0.5-0.163 0.765-0.215zm1.77 0.268c0.383 0.261 0.568 0.603 0.568 1.068 0 0.487-0.222 0.86-0.707 1.164-0.38 0.238-0.9 0.399-1.562 0.469-0.096 0.01-0.147 0.118-0.096 0.199l0.354 0.543c0.027 0.042 0.075 0.065 0.125 0.059 0.785-0.111 1.415-0.334 1.881-0.68 0.595-0.441 0.904-1.036 0.904-1.746 0-0.402-0.113-0.759-0.31-1.072h-1.045c-0.037 0-0.075-2e-3 -0.111-4e-3zm-3.363 0.432c0.011 0.51 0.026 0.976 0.057 1.33-0.36 0.318-0.686 0.475-0.973 0.475-0.054 0-0.069-0.012-0.08-0.025-0.011-0.011-0.027-0.042-0.027-0.11 0-0.033-8e-3 -0.065-0.014-0.097 4e-3 -0.024 0.012-0.05 0.014-0.075 0.029-0.373 0.239-0.767 0.652-1.187l2e-3 -2e-3c0.129-0.136 0.249-0.217 0.369-0.309z"/><path d="m2 6c-1.108 0-2 0.892-2 2v6c0 1.108 0.892 2 2 2h6c1.108 0 2-0.892 2-2v-3h-1v3c0 0.554-0.446 1-1 1h-6c-0.554 0-1-0.446-1-1v-6c0-0.554 0.446-1 1-1h3v-1h-3z"/></svg>',
+keyboard: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><g transform="translate(0,3)"><path d="m3 0c-1.662 0-3 1.338-3 3v5c0 1.662 1.338 3 3 3h10c1.662 0 3-1.338 3-3v-5c0-1.662-1.338-3-3-3zm0 1h10c1.108 0 2 0.892 2 2v5c0 1.108-0.892 2-2 2h-10c-1.108 0-2-0.892-2-2v-5c0-1.108 0.892-2 2-2z"/><path transform="translate(0,-0.5)" d="m3 3.5v1h1v-1zm2 0v1h1v-1zm2 0v1h1v-1zm2 0v1h1v-1zm2 0v1h2v-1zm-8 2v1h2v-1zm3 0v1h1v-1zm2 0v1h1v-1zm2 0v1h3v-1zm-7 2v1h1v-1zm2 0v1h6v-1zm7 0v1h1v-1z"/></g></svg>',
+text: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M3 0c-.554 0-1 .446-1 1v14c0 .554.446 1 1 1h10c.554 0 1-.446 1-1V5c0-.554-4.446-5-5-5zm.5 1H9v4h4v9.5c0 .277-.223.5-.5.5h-9a.499.499 0 0 1-.5-.5v-13c0-.277.223-.5.5-.5zM5 8v1h6V8zm0 2v1h6v-1zm0 2v1h4v-1z"/></svg>',
+harddisk: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="m6 2c-1.4995 0-2.5425 1.0366-2.9316 2.0332l-2.8691 7.4844c-0.0032 8e-3 -5e-3 0.016-8e-3 0.023l-0.0586 0.151h0.0117c-0.087 0.254-0.1445 0.523-0.1445 0.808 0 1.385 1.115 2.5 2.5 2.5h11c1.385 0 2.5-1.115 2.5-2.5 0-0.285-0.057-0.554-0.145-0.809h0.012l-0.059-0.15-4e-3 -0.016-2.869-7.488c-0.389-0.996-1.432-2.033-2.932-2.033h-2zm0 1h4c1.108 0 1.7085 0.65 2 1.3965l2.1875 5.711c-0.22-0.063-0.447-0.108-0.687-0.108h-11c-0.24 0-0.468 0.045-0.6875 0.108l2.1875-5.711c0.2915-0.746 0.892-1.396 2-1.396zm-3.5 8h11c0.831 0 1.5 0.669 1.5 1.5s-0.669 1.5-1.5 1.5h-11c-0.831 0-1.5-0.669-1.5-1.5s0.669-1.5 1.5-1.5z"/><circle cx="12.5" cy="12.5" r=".5"/><circle cx="10.5" cy="12.5" r=".5"/><circle cx="8.5" cy="12.5" r=".5"/></svg>',
+users: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><circle cx="5.5" cy="4" r="2.75"/><path d="M0.5 14c0-3 2.2-5 5-5s5 2 5 5v1h-10z"/><circle cx="11.75" cy="4.75" r="2.25"/><path d="M11.75 8.5c2.1 0 3.75 1.6 3.75 4.25V15h-3.1c.4-.6.6-1.3.6-2.25 0-1.55-.5-2.9-1.25-4.25z"/></svg>',
+privacy: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 4.41 3.58 8 8 8s8-3.59 8-8c0-4.42-3.58-8-8-8zm0 1a7 7 0 0 1 7 7 7 7 0 0 1-7 7 7 7 0 0 1-7-7 7 7 0 0 1 7-7z"/><path d="m7.9395 4a4 4 0 0 0-3.9395 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4 4 4 0 0 0-0.060547 0zm0.0098 1a3 3 0 0 1 0.050781 0 3 3 0 0 1 3 3 3 3 0 0 1-3 3 3 3 0 0 1-3-3 3 3 0 0 1 2.9492-3z"/><path d="M8 2 6 5h4z"/></svg>',
+find: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="m7 2a5 5 0 0 0-3.5352 1.4648 5 5 0 0 0 0 7.0703 5 5 0 0 0 6.6992 0.336l4.2598 4.26 0.70703-0.707-4.26-4.26a5 5 0 0 0-0.336-6.6992 5 5 0 0 0-3.535-1.465zm0 1a4 4 0 0 1 2.8281 1.1719 4 4 0 0 1 0 5.6562 4 4 0 0 1-5.6562 0 4 4 0 0 1 0-5.6562 4 4 0 0 1 2.8281-1.1719z"/></svg>',
+install: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="m2 1c-0.554 0-1 0.446-1 1v4c0 0.554 0.446 1 1 1h4c0.554 0 1-0.446 1-1v-4c0-0.554-0.446-1-1-1h-4zm8 0c-0.554 0-1 0.446-1 1v4c0 0.554 0.446 1 1 1h4c0.554 0 1-0.446 1-1v-4c0-0.554-0.446-1-1-1h-4zm-8 1h4v4h-4v-4zm8 0h4v4h-4v-4zm-8 7c-0.554 0-1 0.446-1 1v4c0 0.554 0.446 1 1 1h4c0.554 0 1-0.446 1-1v-4c0-0.554-0.446-1-1-1h-4zm10 0c-0.277 0-0.5 0.223-0.5 0.5v3.836l-1.311-1.311c-0.196-0.196-0.511-0.196-0.707 0-0.196 0.196-0.196 0.511 0 0.707l2.121 2.121c0.103 0.103 0.24 0.152 0.375 0.147 7e-3 3e-4 0.014 0 0.021 0 0.201 0 0.374-0.118 0.453-0.289l1.979-1.979c0.196-0.196 0.196-0.511 0-0.707-0.196-0.196-0.511-0.196-0.707 0l-1.225 1.225v-3.75c0-0.277-0.223-0.5-0.5-0.5zm-10 1h4v4h-4v-4z"/></svg>',
+partition: '<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="currentColor"><rect x="1.5" y="4.5" width="13" height="7" rx="1.5"/><path d="M5.5 4.5v7M10 4.5v7"/></g></svg>',
+chevron: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.5 5.5l5 5 5-5" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+
+// -- the tables, as tables.cpp holds them -----------------------------------
+const LANGUAGES = [
+["en_US","English","United States","English"],["en_GB","English","United Kingdom","English (UK)"],
+["zh_CN","Chinese (Simplified)","China","\u7b80\u4f53\u4e2d\u6587"],["zh_TW","Chinese (Traditional)","Taiwan","\u7e41\u9ad4\u4e2d\u6587"],
+["ja_JP","Japanese","Japan","\u65e5\u672c\u8a9e"],["ko_KR","Korean","Korea","\ud55c\uad6d\uc5b4"],
+["de_DE","German","Germany","Deutsch"],["fr_FR","French","France","Fran\u00e7ais"],
+["es_ES","Spanish","Spain","Espa\u00f1ol"],["pt_BR","Portuguese","Brazil","Portugu\u00eas (Brasil)"],
+["ru_RU","Russian","Russia","\u0420\u0443\u0441\u0441\u043a\u0438\u0439"],["it_IT","Italian","Italy","Italiano"],
+["nl_NL","Dutch","Netherlands","Nederlands"],["pl_PL","Polish","Poland","Polski"],
+["tr_TR","Turkish","Turkey","T\u00fcrk\u00e7e"],["ar_EG","Arabic","Egypt","\u0627\u0644\u0639\u0631\u0628\u064a\u0629"],
+["hi_IN","Hindi","India","\u0939\u093f\u0928\u094d\u0926\u0940"],["id_ID","Indonesian","Indonesia","Bahasa Indonesia"],
+["th_TH","Thai","Thailand","\u0e44\u0e17\u0e22"],["vi_VN","Vietnamese","Vietnam","Ti\u1ebfng Vi\u1ec7t"]];
+
+const KEYBOARDS = [
+["us","English (US)","QWERTY"],["gb","English (UK)","QWERTY"],["de","German","QWERTZ"],
+["de-ch","German (Switzerland)","QWERTZ"],["fr","French","AZERTY"],["be","Belgian","AZERTY"],
+["es","Spanish","QWERTY"],["latam","Spanish (Latin America)","QWERTY"],["it","Italian","QWERTY"],
+["pt-br","Portuguese (Brazil)","QWERTY, ABNT2"],["ru","Russian","\u0419\u0426\u0423\u041a\u0415\u041d"],
+["ua","Ukrainian","\u0419\u0426\u0423\u041a\u0415\u041d"],["jp","Japanese","JIS"],["cn","Chinese","Pinyin"],
+["kr","Korean","Dubeolsik"],["tr","Turkish","QWERTY, T"],["ara","Arabic","AZERTY-like"],
+["in","Hindi","InScript"],["th","Thai","Kedmanee"],["vn","Vietnamese","Telex"]];
+
+const ZONES = ["Africa/Cairo","Africa/Johannesburg","Africa/Lagos","Africa/Nairobi","America/Anchorage",
+"America/Argentina/Buenos_Aires","America/Bogota","America/Caracas","America/Chicago","America/Denver",
+"America/Halifax","America/Lima","America/Los_Angeles","America/Mexico_City","America/New_York",
+"America/Phoenix","America/Sao_Paulo","America/Santiago","America/Toronto","America/Vancouver",
+"Asia/Bangkok","Asia/Dubai","Asia/Hong_Kong","Asia/Jakarta","Asia/Jerusalem","Asia/Kolkata",
+"Asia/Kuala_Lumpur","Asia/Manila","Asia/Riyadh","Asia/Seoul","Asia/Shanghai","Asia/Singapore",
+"Asia/Taipei","Asia/Tehran","Asia/Tokyo","Australia/Adelaide","Australia/Brisbane","Australia/Melbourne",
+"Australia/Perth","Australia/Sydney","Europe/Amsterdam","Europe/Athens","Europe/Berlin","Europe/Brussels",
+"Europe/Copenhagen","Europe/Helsinki","Europe/Istanbul","Europe/Lisbon","Europe/London","Europe/Madrid",
+"Europe/Moscow","Europe/Oslo","Europe/Paris","Europe/Prague","Europe/Rome","Europe/Stockholm",
+"Europe/Vienna","Europe/Warsaw","Europe/Zurich","Pacific/Auckland","UTC"];
+
+// The machine this page pretends to be: the disks the canned scan would
+// report, the same live USB it runs from.
+const DISKS = [
+{model:"Samsung SSD 980", kname:"/dev/sda", size:"1.0 TB", total:1000204886016,
+ parts:[{kname:"/dev/sda1",fstype:"vfat",label:"EFI",size:"536.9 MB",bytes:536870912},
+        {kname:"/dev/sda2",fstype:"swap",label:"",size:"4.3 GB",bytes:4294967296},
+        {kname:"/dev/sda3",fstype:"ext4",label:"",size:"995.4 GB",bytes:995371173888}]},
+{model:"WD Blue SN550", kname:"/dev/nvme0n1", size:"512.1 GB", total:512110190592,
+ parts:[{kname:"/dev/nvme0n1p1",fstype:"ext4",label:"",size:"512.1 GB",bytes:512110190592}]}];
+
+const STEP_NAMES = ["Language","Keyboard","Agreement","Disk","Users","Privacy","Review","Install","Done"];
+const SIDEBAR = [
+{name:"Language", icon:"locale", tint:["#5BA4FF","#3385FF"]},
+{name:"Keyboard", icon:"keyboard", tint:["#6E7889","#4F596B"]},
+{name:"Agreement", icon:"text", tint:["#FFB267","#FEA042"]},
+{name:"Disk", icon:"harddisk", tint:["#52D179","#35BF56"]},
+{name:"Users", icon:"users", tint:["#9E87FF","#8266FF"]},
+{name:"Privacy", icon:"privacy", tint:["#D784BD","#CA64AC"]},
+{name:"Review", icon:"find", tint:["#6E7889","#4F596B"]},
+{name:"Install", icon:"install", tint:["#5BA4FF","#3385FF"]}];
+
+// -- the state ---------------------------------------------------------------
+const plan = {
+    language:"en_US", keyboard:"us", disk:0, manual:false,
+    roles:{}, formats:{}, agree:false,
+    fullName:"", userName:"", hostName:"cutefish-pc", password:"", password2:"",
+    zone:"Asia/Kolkata", privacy:{location:false, diagnostics:false, tailored:false}
+};
+let step = 0;
+let installing = false;
+let usernameTouched = false;
+let toastTimer = null;
+let installTimer = null;
+let installAt = 0;
+
+// -- the small shared pieces --------------------------------------------------
+const $ = (id) => document.getElementById(id);
+
+function show(el, on) { el.classList.toggle("hidden", !on); }
+
+function toast(message) {
+    const el = $("toast");
+    el.textContent = message;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+// A row of a card: the toolkit's IconTextRow with its check at the end.
+function iconRow(icon, title, subtitle, onClick) {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.onclick = onClick;
+    let inner = "";
+    if (icon)
+        inner += '<div class="ricon">' + ICONS[icon] + "</div>";
+    inner += '<div class="rtext"><div class="rtitle">' + title + "</div>"
+           + (subtitle ? '<div class="rsub">' + subtitle + "</div>" : "") + "</div>"
+           + '<div class="rcheck">' + ICONS.check + "</div>";
+    row.innerHTML = inner;
+    return row;
+}
+function markChecked(container, chosen) {
+    container.querySelectorAll(".row").forEach((r) => r.classList.toggle("selected", r === chosen));
+}
+
+// The toolkit's own ComboBox, in the settings app's shape.
+function makeCombo(items, chosenIndex, onPick, menuClass) {
+    const box = document.createElement("div");
+    box.className = "combo";
+    const value = document.createElement("span");
+    value.textContent = items[chosenIndex];
+    const menu = document.createElement("div");
+    menu.className = "menu" + (menuClass ? " " + menuClass : "");
+    items.forEach((item, index) => {
+        const entry = document.createElement("div");
+        entry.className = "item" + (index === chosenIndex ? " chosen" : "");
+        entry.textContent = item;
+        entry.onclick = (e) => {
+            e.stopPropagation();
+            value.textContent = item;
+            menu.querySelectorAll(".item").forEach((n, i) => n.classList.toggle("chosen", i === index));
+            box.classList.remove("open");
+            onPick(index, item);
+        };
+        menu.appendChild(entry);
+    });
+    box.append(value, makeChevron(), menu);
+    box.onclick = (e) => {
+        e.stopPropagation();
+        document.querySelectorAll(".combo.open").forEach((c) => { if (c !== box) c.classList.remove("open"); });
+        box.classList.toggle("open");
+        if (box.classList.contains("open"))
+            menu.scrollTop = Math.max(0, (chosenIndex - 5) * 32);
+    };
+    return box;
+}
+function makeChevron() {
+    const span = document.createElement("span");
+    span.className = "chev";
+    span.innerHTML = ICONS.chevron;
+    return span;
+}
+document.addEventListener("click", () => document.querySelectorAll(".combo.open")
+    .forEach((c) => c.classList.remove("open")));
+
+// -- the sidebar ---------------------------------------------------------------
+function buildSidebar() {
+    const list = $("steps");
+    SIDEBAR.forEach((entry, index) => {
+        const item = document.createElement("div");
+        item.className = "step" + (index === 0 ? " current" : "");
+        item.innerHTML = '<div class="tile" style="background:linear-gradient(180deg,' +
+            entry.tint[0] + "," + entry.tint[1] + ')">' + ICONS[entry.icon] + "</div><span>" +
+            entry.name + "</span>";
+        item.onclick = () => { if (!installing && index < step) goTo(index); };
+        list.appendChild(item);
+    });
+}
+
+// -- the first pages ------------------------------------------------------------
+function buildLanguagePage() {
+    const card = $("langlist");
+    card.textContent = "";
+    LANGUAGES.forEach(([code, name, territory, native]) => {
+        const row = iconRow("", name, territory + " \u00b7 " + native, () => {
+            plan.language = code;
+            markChecked(card, row);
+        });
+        row.classList.add("one");
+        if (code === plan.language) row.classList.add("selected");
+        card.appendChild(row);
+    });
+}
+
+function buildKeyboardPage() {
+    const card = $("kblist");
+    card.textContent = "";
+    KEYBOARDS.forEach(([code, name, hint]) => {
+        const row = iconRow("keyboard", name, hint, () => {
+            plan.keyboard = code;
+            markChecked(card, row);
+        });
+        row.classList.add("one");
+        if (code === plan.keyboard) row.classList.add("selected");
+        card.appendChild(row);
+    });
+}
+
+function toggleAgree() {
+    plan.agree = !plan.agree;
+    const box = $("agreecheck");
+    box.classList.toggle("on", plan.agree);
+    box.classList.toggle("off", !plan.agree);
+    refreshFooter();
+}
+
+// -- the disk page -----------------------------------------------------------
+// The bar the C++ DiskBar paints: the erase mode's own plan, or the disk's
+// partitions as they stand, the same colours the engine's plan uses.
+function renderDiskbar() {
+    const bar = $("diskbar");
+    bar.textContent = "";
+    const disk = DISKS[plan.disk];
+    const stretches = [];
+    if (!plan.manual) {
+        stretches.push({pct:0.05, fill:"var(--accent)", label:"EFI"});
+        stretches.push({pct:0.8, fill:"var(--purple)", label:"swap"});
+        stretches.push({pct:98.3, fill:"var(--accent)", label:"Cutefish OS"});
+    } else {
+        disk.parts.forEach((part) => {
+            const fill = part.fstype === "vfat" ? "#66A7FF"
+                : part.fstype === "swap" ? "var(--purple)"
+                : part.fstype === "ext4" ? "var(--accent)"
+                : "var(--grey)";
+            stretches.push({pct:Math.max(0.6, 99.15 * part.bytes / disk.total), fill,
+                label: part.label || part.kname});
+        });
+    }
+    stretches.forEach((s) => {
+        const block = document.createElement("div");
+        block.className = "stretch";
+        block.style.width = s.pct + "%";
+        block.style.background = s.fill;
+        block.style.minWidth = "6px";
+        if (s.pct >= 8)
+            block.textContent = s.label;
+        bar.appendChild(block);
+    });
+    const free = document.createElement("div");
+    free.className = "stretch free";
+    bar.appendChild(free);
+}
+
+function buildDiskPage() {
+    const card = $("disklist");
+    card.textContent = "";
+    DISKS.forEach((disk, index) => {
+        const row = iconRow("harddisk", disk.model,
+            disk.size + " \u00b7 " + disk.parts.length + " "
+            + (disk.parts.length === 1 ? "partition" : "partitions"), () => {
+            plan.disk = index;
+            plan.roles = {};
+            plan.formats = {};
+            buildDiskPage();
+        });
+        if (index === plan.disk) row.classList.add("selected");
+        card.appendChild(row);
+    });
+
+    const how = $("howlist");
+    how.textContent = "";
+    const erase = iconRow("harddisk", "Erase the whole disk",
+        "The disk is laid out anew: an EFI corner, swap, and the system on the rest. Everything on it is lost.",
+        () => { plan.manual = false; buildDiskPage(); });
+    const manual = iconRow("partition", "Use the partitions as they are",
+        "The partition table is left alone; choose where each partition mounts.",
+        () => { plan.manual = true; buildDiskPage(); });
+    if (!plan.manual) erase.classList.add("selected"); else manual.classList.add("selected");
+    how.append(erase, manual);
+
+    renderDiskbar();
+
+    const section = $("mountsection");
+    const list = $("mountlist");
+    list.textContent = "";
+    if (plan.manual) {
+        section.style.display = "";
+        const roles = ["Not used", "/ \u2014 the system", "/boot/efi \u2014 the loaders", "swap"];
+        DISKS[plan.disk].parts.forEach((part) => {
+            const row = document.createElement("div");
+            row.className = "formrow";
+            const text = document.createElement("div");
+            text.className = "ftext";
+            text.innerHTML = '<div class="ftitle">' + part.kname + "  \u00b7  "
+                + (part.fstype || "no file system") + "  \u00b7  " + part.size + "</div>";
+            const combo = makeCombo(roles, plan.roles[part.kname] || 0, (choice) => {
+                plan.roles[part.kname] = choice;
+                refreshFooter();
+            });
+            combo.style.minWidth = "168px";
+            const format = document.createElement("div");
+            format.className = "check " + (plan.formats[part.kname] ? "on" : "off");
+            format.title = "Format";
+            format.onclick = (e) => {
+                e.stopPropagation();
+                plan.formats[part.kname] = !plan.formats[part.kname];
+                format.classList.toggle("on", plan.formats[part.kname]);
+                format.classList.toggle("off", !plan.formats[part.kname]);
+            };
+            row.append(text, combo, format);
+            list.appendChild(row);
+        });
+    } else {
+        section.style.display = "none";
+    }
+}
+
+function diskChoiceReady() {
+    if (plan.manual) {
+        const choices = Object.values(plan.roles);
+        if (!choices.includes(1))
+            return { ok:false, why:"Choose which partition the system itself mounts at /." };
+        if (!choices.includes(2))
+            return { ok:false, why:"This machine boots the UEFI way: choose a partition at /boot/efi as well." };
+    }
+    return { ok:true };
+}
+
+// -- the account page ---------------------------------------------------------
+// The same rules util.cpp checks, told the same way the page tells them.
+function suggestUsername(fullName) {
+    let name = "", hyphen = false;
+    for (const c of fullName) {
+        if (/[a-zA-Z0-9]/.test(c) && c.charCodeAt(0) < 128) {
+            name += c.toLowerCase();
+            hyphen = false;
+        } else if (name && !hyphen) {
+            name += "-";
+            hyphen = true;
+        }
+    }
+    return name.replace(/-+$/, "");
+}
+function suggestHostname(text) {
+    let name = "", hyphen = false;
+    for (const c of text) {
+        if (/[a-zA-Z0-9]/.test(c) && c.charCodeAt(0) < 128) {
+            name += c.toLowerCase();
+            hyphen = false;
+        } else if (name && !hyphen) {
+            name += "-";
+            hyphen = true;
+        }
+    }
+    return name.replace(/^-+/, "").replace(/-+$/, "");
+}
+const validUsername = (name) => /^[a-z][a-z0-9_-]*$/.test(name);
+const validHostname = (name) => /^[a-z0-9]+(-[a-z0-9]+)*$/.test(name);
+
+function userEdited() {
+    plan.fullName = $("f-name").value;
+    if (!usernameTouched)
+        $("f-user").value = suggestUsername(plan.fullName);
+    plan.userName = $("f-user").value;
+    plan.hostName = $("f-host").value;
+    plan.password = $("f-pass").value;
+    plan.password2 = $("f-pass2").value;
+    refreshUserHint();
+    refreshFooter();
+}
+function usernameEdited() {
+    usernameTouched = true;
+    userEdited();
+}
+function refreshUserHint() {
+    const hint = $("userhint");
+    const pass = plan.password, again = plan.password2;
+    if (pass && again && pass !== again) {
+        hint.textContent = "The two passwords differ.";
+        hint.style.color = "#FF5C6D";
+        hint.style.display = "";
+    } else if (pass && pass.length < 8) {
+        hint.textContent = "A longer password keeps the machine safer.";
+        hint.style.color = "";
+        hint.style.display = "";
+    } else if (!pass && !again) {
+        hint.style.display = "none";
+    } else {
+        hint.style.display = "none";
+    }
+}
+function userChoiceReady() {
+    if (!plan.fullName || !plan.userName)
+        return { ok:false, why:"The account needs a name and a username." };
+    if (!validUsername(plan.userName))
+        return { ok:false, why:"The username takes lower case letters, digits, hyphens and underscores, and starts with a letter." };
+    if (!validHostname(suggestHostname(plan.hostName)))
+        return { ok:false, why:"The computer's name takes lower case letters, digits and hyphens." };
+    if (!plan.password)
+        return { ok:false, why:"The account needs a password." };
+    if (plan.password !== plan.password2)
+        return { ok:false, why:"The two passwords differ." };
+    return { ok:true };
+}
+
+function buildUserPage() {
+    userEdited();
+    const holder = $("zonecombo");
+    if (holder && !holder.hasChildNodes()) {
+        const combo = makeCombo(ZONES, ZONES.indexOf(plan.zone), (index, item) => {
+            plan.zone = item;
+        }, "zones");
+        combo.id = "zonecombo";
+        holder.replaceWith(combo);
+    }
+}
+
+// -- the privacy page -----------------------------------------------------------
+function togglePrivacy(el, key) {
+    plan.privacy[key] = !plan.privacy[key];
+    el.classList.toggle("on", plan.privacy[key]);
+}
+
+// -- the review ------------------------------------------------------------------
+function buildReviewPage() {
+    const disk = DISKS[plan.disk];
+    const rows = [
+        ["Language", LANGUAGES.find(([code]) => code === plan.language)[1]],
+        ["Keyboard", KEYBOARDS.find(([code]) => code === plan.keyboard)[1]],
+        ["Time zone", plan.zone],
+        ["Disk", disk.model + " \u00b7 " + disk.size],
+        ["Layout", plan.manual
+            ? "The partitions are used as they are (" + Object.values(plan.roles).filter((c) => c > 0).length + ")"
+            : "The whole disk is erased and laid out anew"],
+        ["Account", plan.fullName + " (" + plan.userName + ")"],
+        ["The computer's name", suggestHostname(plan.hostName) || plan.hostName],
+    ];
+    const card = $("reviewlist");
+    card.textContent = "";
+    rows.forEach(([key, value]) => {
+        const row = document.createElement("div");
+        row.className = "valuerow";
+        row.innerHTML = '<span class="k">' + key + '</span><span class="v">' + value + "</span>";
+        card.appendChild(row);
+    });
+    $("reviewnote").textContent = plan.manual
+        ? "The partitions chosen to format are made into empty new file systems. Make sure anything needed from them is saved elsewhere."
+        : "Everything on the chosen disk is erased. Make sure anything needed from it is saved elsewhere.";
+}
+
+// -- the walk ---------------------------------------------------------------------
+function goTo(next) {
+    step = next;
+    document.querySelectorAll(".page").forEach((page, index) =>
+        page.classList.toggle("active", index === step));
+    const at = Math.min(step, SIDEBAR.length - 1);
+    document.querySelectorAll("#steps .step").forEach((item, index) => {
+        item.classList.toggle("current", index === at);
+        item.classList.toggle("done", index < at);
+    });
+    $("headtitle").textContent = STEP_NAMES[step];
+    if (step === 3) buildDiskPage();
+    if (step === 4) buildUserPage();
+    if (step === 6) buildReviewPage();
+    refreshFooter();
+}
+
+function refreshFooter() {
+    const back = $("btn-back"), next = $("btn-next"), stop = $("btn-stop");
+    show(back, step !== 0 && step !== 7);
+    show(next, step !== 7);
+    show(stop, step === 7 && installing);
+    back.textContent = step === 8 ? "Keep using the live session" : "Back";
+    next.classList.toggle("primary", step !== 7);
+    if (step === 8) {
+        next.textContent = "Restart now";
+        next.classList.add("primary");
+        next.disabled = false;
+        return;
+    }
+    next.textContent = step === 6 ? "Install" : "Continue";
+    if (step === 2) next.disabled = !plan.agree;
+    else if (step === 3) next.disabled = !diskChoiceReady().ok;
+    else if (step === 4) next.disabled = !userChoiceReady().ok;
+    else next.disabled = false;
+}
+
+function nextClicked() {
+    if (step === 6) {
+        askConfirm();
+        return;
+    }
+    if (step === 8) {
+        window.location.reload();
+        return;
+    }
+    if (step === 2 && !plan.agree) return;
+    if (step === 3) {
+        const ready = diskChoiceReady();
+        if (!ready.ok) { toast(ready.why); return; }
+    }
+    if (step === 4) {
+        const ready = userChoiceReady();
+        if (!ready.ok) { toast(ready.why); return; }
+    }
+    goTo(step + 1);
+}
+
+function backClicked() {
+    if (installing) return;
+    if (step === 8) {
+        // The live session goes on without the window.
+        document.querySelector(".window").style.display = "none";
+        return;
+    }
+    if (step > 0) goTo(step - 1);
+}
+
+// The last honest warning, as the C++ window asks it.
+function askConfirm() {
+    $("dlg-title").textContent = "Install now";
+    $("dlg-text").textContent = plan.manual
+        ? "The chosen partitions are mounted and made into a new system. Files on the ones to format are lost. Install?"
+        : "The whole disk is erased and Cutefish OS is installed on it. Everything on it is lost. Install?";
+    $("dlg-ok").textContent = "Install";
+    $("dlg-ok").onclick = () => { closeConfirm(); startInstall(); };
+    $("overlay").classList.add("show");
+}
+function closeConfirm() {
+    $("overlay").classList.remove("show");
+}
+$("dlg-cancel").onclick = closeConfirm;
+
+// -- the work itself ----------------------------------------------------------------
+// The engine's own record, walked as cutefish-installerctl walks it: the same
+// steps, the same commands, the same words. Here they are only told of.
+const INSTALL_EVENTS = [
+[0.3, "s", "Checking the machine and the plan"],
+[0.4, "l", "$ cutefish-installerctl install --config /tmp/cutefish-installer/plan.json --progress-events"],
+[1.0, "l", "the machine boots the UEFI way"],
+[1.6, "l", "installing to Samsung SSD 980 \u00b7 1.0 TB (/dev/sda)"],
+[2.2, "l", "root on /dev/sda3, EFI system partition on /dev/sda1, swap on /dev/sda2"],
+[3.6, "s", "Laying out the disk"],
+[3.7, "l", "$ wipefs -a /dev/sda"],
+[4.3, "l", "$ sgdisk --zap-all /dev/sda"],
+[5.0, "l", "$ sgdisk --new=1:0:+512M --typecode=1:ef00 /dev/sda"],
+[5.7, "l", "$ sgdisk --new=2:0:+8G --typecode=2:8200 /dev/sda"],
+[6.4, "l", "$ sgdisk --new=3:0:0 --typecode=3:8300 /dev/sda"],
+[7.1, "l", "$ partprobe /dev/sda"],
+[7.6, "l", "$ udevadm settle --timeout=5 --exit-if-exists=/dev/sda3"],
+[8.2, "s", "Making the file systems"],
+[8.8, "l", "$ mkfs.vfat -F 32 -n EFI /dev/sda1"],
+[10.4, "l", "$ mkswap -L swap /dev/sda2"],
+[12.0, "l", "$ mkfs.ext4 -F -L cutefish /dev/sda3"],
+[14.6, "l", "the file systems are made"],
+[16.2, "s", "Mounting the new system"],
+[16.8, "l", "$ mkdir -p /mnt/target"],
+[17.3, "l", "$ mount /dev/sda3 /mnt/target"],
+[17.9, "l", "$ swapon /dev/sda2"],
+[18.4, "l", "$ mkdir -p /mnt/target/boot/efi"],
+[18.8, "l", "$ mount /dev/sda1 /mnt/target/boot/efi"],
+[19.4, "s", "Copying the system's files"],
+[19.9, "l", "copying the live system itself onto the new disk"],
+[20.5, "l", "$ rsync -aHAXx --info=progress2 / /mnt/target"],
+[26, "m", "copying /usr/lib \u2026"],
+[32, "m", "copying /usr/share \u2026"],
+[38, "m", "copying /opt \u2026"],
+[44, "m", "copying /var/lib \u2026"],
+[50, "m", "copying /etc \u2026"],
+[56, "m", "copying /boot and the kernel's modules \u2026"],
+[62.5, "l", "the copy is done"],
+[64.3, "s", "Writing the mounts table"],
+[64.9, "l", "the mounts table:"],
+[65.1, "l", "# /etc/fstab\nUUID=3333-root  /          ext4  defaults,noatime  0 1\nUUID=2222-swap  none       swap  sw                0 0\nUUID=AAAA-1111  /boot/efi  vfat  defaults,noatime  0 2"],
+[67.3, "s", "Configuring the new system"],
+[67.8, "l", "$ mount --bind /dev /mnt/target/dev"],
+[68.1, "l", "$ mount --bind /run /mnt/target/run"],
+[68.4, "l", "$ mount -t proc proc /mnt/target/proc"],
+[68.7, "l", "$ mount --bind /sys /mnt/target/sys"],
+[69.0, "l", "$ mount --bind /sys/firmware/efi/efivars /mnt/target/sys/firmware/efi/efivars"],
+[70.0, "l", "$ write /mnt/target/etc/locale.conf   LANG=en_US.UTF-8"],
+[70.8, "l", "$ chroot /mnt/target locale-gen"],
+[71.8, "l", "$ write /mnt/target/etc/vconsole.conf   KEYMAP=us"],
+[72.4, "l", "$ write /mnt/target/etc/X11/xorg.conf.d/00-keyboard.conf"],
+[73.0, "l", "$ ln -sf /usr/share/zoneinfo/" + "Asia/Kolkata" + " /mnt/target/etc/localtime"],
+[73.6, "l", "$ write /mnt/target/etc/timezone"],
+[74.2, "l", "$ write /mnt/target/etc/hostname   cutefish-pc"],
+[74.8, "l", "$ write /mnt/target/etc/hosts"],
+[75.4, "l", "$ chroot /mnt/target useradd -m -G wheel,audio,video,netdev -s /bin/bash john"],
+[76.4, "l", "$ chroot /mnt/target chpasswd"],
+[77.0, "l", "$ enable %wheel in /etc/sudoers"],
+[77.6, "l", "$ write /mnt/target/etc/cutefish/privacy.conf"],
+[82.0, "l", "the network's own settings are left as the image has them"],
+[85.3, "s", "Installing the bootloader"],
+[86.0, "l", "$ chroot /mnt/target update-initramfs -u -k all"],
+[88.0, "l", "$ chroot /mnt/target grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=Cutefish"],
+[90.5, "l", "$ chroot /mnt/target grub-mkconfig -o /boot/grub/grub.cfg"],
+[93.3, "s", "Setting the first boot up"],
+[93.9, "l", "$ chroot /mnt/target systemctl preset-all"],
+[94.8, "l", "$ write /mnt/target/etc/cutefish/firstboot.conf   welcome=true"],
+[97.3, "s", "Finishing up"],
+[97.8, "l", "$ umount -R /mnt/target"],
+[98.6, "l", "done"]
+];
+
+function addLog(text, stepLine) {
+    const log = $("log");
+    const line = document.createElement("div");
+    line.className = "lline" + (stepLine ? " lstep" : "");
+    line.textContent = text;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+}
+
+function startInstall() {
+    installing = true;
+    installAt = 0;
+    goTo(7);
+    $("steplabel").textContent = "Starting\u2026";
+    $("statusline").textContent = "";
+    $("progressbar").style.width = "0%";
+    $("log").textContent = "";
+    refreshFooter();
+
+    let percent = 0;
+    const speedAt = (p) =>
+        p < 3 ? 0.42 : p < 8 ? 0.38 : p < 16 ? 0.34 : p < 19 ? 0.42
+        : p < 62 ? 0.155 : p < 64 ? 0.42 : p < 67 ? 0.42
+        : p < 85 ? 0.145 : p < 93 ? 0.30 : p < 97 ? 0.42 : 0.40;
+    installTimer = setInterval(() => {
+        percent = Math.min(100, percent + speedAt(percent) * (0.7 + Math.random() * 0.6));
+        $("progressbar").style.width = percent.toFixed(1) + "%";
+        while (installAt < INSTALL_EVENTS.length && INSTALL_EVENTS[installAt][0] <= percent) {
+            const [at, kind, text] = INSTALL_EVENTS[installAt++];
+            if (kind === "s") {
+                $("steplabel").textContent = text;
+                $("statusline").textContent = "";
+                addLog("== " + text + " ==", true);
+            } else {
+                addLog(text, false);
+                if (kind === "m")
+                    $("statusline").textContent = text;
+                else
+                    $("statusline").textContent = "";
+            }
+        }
+        if (percent >= 100) {
+            clearInterval(installTimer);
+            installTimer = null;
+            $("statusline").textContent = "Done.";
+            setTimeout(() => {
+                installing = false;
+                goTo(8);
+            }, 900);
+        }
+    }, 70);
+}
+
+function stopClicked() {
+    if (!installing) return;
+    clearInterval(installTimer);
+    installTimer = null;
+    installing = false;
+    addLog("Stopped. The machine was left as it was.", false);
+    goTo(6);
+    toast("The install was stopped before anything was finished.");
+}
+
+// -- the look -------------------------------------------------------------------
+function toggleTheme() {
+    const root = document.documentElement;
+    const dark = root.getAttribute("data-theme") === "dark";
+    root.setAttribute("data-theme", dark ? "light" : "dark");
+    $("themebtn").textContent = dark ? "Dark mode" : "Light mode";
+}
+
+// -- the beginning -----------------------------------------------------------------
+buildSidebar();
+buildLanguagePage();
+buildKeyboardPage();
+buildDiskPage();
+userEdited();
+refreshFooter();
+</script>
+</body>
+</html>

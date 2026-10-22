@@ -1,0 +1,373 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: cutefish-backup\n"
+"Report-Msgid-Bugs-To: https://github.com/cutefishos\n"
+"POT-Creation-Date: 2026-10-22 04:00+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: src/app/pagesetup.cpp
+msgid "A few services of the desktop can reach the internet: the weather, the maps, the time, the updates. The privacy choices two steps ahead decide which of them the installed system starts with, and every one of them can be turned on or off at any time, in the settings."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "A longer password keeps the machine safer."
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Agreement"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "Apps may ask where this machine is, for the weather and the maps."
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Back"
+msgstr ""
+
+#: src/app/pagesetup.cpp
+msgid "By choosing Continue you accept all of the above."
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "Choose a disk for Cutefish OS."
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "Choose the disk Cutefish OS is installed on. The installer never offers the disk the live session itself runs from."
+msgstr ""
+
+#: src/app/pagesetup.cpp
+msgid "Choose the language the installed system uses. It can be changed later in the settings."
+msgstr ""
+
+#: src/app/pagesetup.cpp
+msgid "Choose the layout of this keyboard. It can be changed later in the settings."
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "Choose which partition the system itself mounts at /."
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Confirm"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Continue"
+msgstr ""
+
+#: src/app/pagerun.cpp
+msgid "Cutefish OS is being installed. Keep the machine on, and give it the time it asks for."
+msgstr ""
+
+#: src/app/pagesetup.cpp
+msgid "Cutefish OS is free software: most of it is licensed under the GNU General Public License and other free licenses, with the source there for anyone to read, change and share, under the terms those licenses set out."
+msgstr ""
+
+#: src/app/pagerun.cpp
+msgid "Cutefish OS is installed."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "Diagnostic reports"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Disk"
+msgstr ""
+
+#: src/app/pagerun.cpp
+msgid "Done"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "Erase the whole disk"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "Everything on the chosen disk is erased. Make sure anything needed from it is saved elsewhere."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "Everything the install will do, in one place. The work starts only from here."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "ex. John Doe"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "Format"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "How"
+msgstr ""
+
+#: src/app/pagesetup.cpp
+msgid "I have read and agree"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Install"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Install Cutefish OS"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Install now"
+msgstr ""
+
+#: src/app/pagesetup.cpp
+msgid "Installing erases and writes disks. Nothing the installer does is hidden: the page before the work itself shows exactly what will be done, and the work only starts after the agreement below."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "john"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Keep using the live session"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Keyboard"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Language"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "Location services"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "Mount points"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "No disk this machine can install to was found. Plug one in and choose this step again."
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "no file system"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "none chosen"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "Not used"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "OK"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "partitions"
+msgstr ""
+
+#: src/app/pagesetup.cpp
+msgid "Please read the agreement. The install goes on only after it is accepted."
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Privacy"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "removable"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Restart now"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Review"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Something went wrong"
+msgstr ""
+
+#: src/app/pagerun.cpp
+msgid "Starting…"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Stop"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Stop the install?"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Stopped. The machine was left as it was."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "Tailored suggestions"
+msgstr ""
+
+#: src/app/pagerun.cpp
+msgid "Take the disk or the stick the machine started from out, and restart.\nEverything you chose — the language, the keyboard, the account — is already set up, and the desktop walks the rest of the way in with you."
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "That disk is too small for Cutefish OS, which needs at least 16 GB."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The account needs a name and a username."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The account needs a password."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The account this machine starts with, and its own name on the network."
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "The chosen disk"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "The chosen partitions are mounted and made into a new system. Files on the ones to format are lost. Install?"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The clock follows it, and the calendar with the sun."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The computer's name takes lower case letters, digits and hyphens."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The desktop's makers learn how it runs, with nothing of your files or your work in it."
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "The disk"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "The disk is laid out anew: an EFI corner, swap, and the system on the rest. Everything on it is lost."
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "The install failed."
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "The install was stopped before anything was finished."
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "The machine is left as it was. Nothing half-done stays on the disk."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The page is not ready."
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "The partition table is left alone; choose where each partition mounts."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The partitions are used as they are"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The partitions chosen to format are made into empty new file systems. Make sure anything needed from them is saved elsewhere."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The password"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The same password again"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The stores and the start page may suggest by what this machine is used for."
+msgstr ""
+
+#: src/app/pagesetup.cpp
+msgid "The system comes as it is, with no warranty of any kind. The people who make it cannot be held responsible for what happens to files, machines or anything else while it is used."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The two passwords differ."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The username takes lower case letters, digits, hyphens and underscores, and starts with a letter."
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "The whole disk is erased and Cutefish OS is installed on it. Everything on it is lost. Install?"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "The whole disk is erased and laid out anew"
+msgstr ""
+
+#: src/app/pagerun.cpp
+msgid "The work itself"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "This disk holds no partitions to mount."
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "This machine boots the UEFI way: choose a partition at /boot/efi as well."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "Time zone"
+msgstr ""
+
+#: src/app/pagedisk.cpp
+msgid "Use the partitions as they are"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Users"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "What the installed system may reach, to begin with. Every one of these can be changed later, in the settings."
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "Where this machine is"
+msgstr ""
+
+#: src/app/installerwindow.cpp
+msgid "Working…"
+msgstr ""
+
+#: src/app/pageuser.cpp
+msgid "Your account"
+msgstr ""

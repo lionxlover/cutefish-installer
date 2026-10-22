@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit-1/policyconfig.dtd">
+<policyconfig>
+
+  <vendor>Cutefish OS</vendor>
+  <vendor_url>https://cutefishos.com</vendor_url>
+
+  <action id="org.cutefish.installer.launch">
+    <description>Run the Cutefish Installer</description>
+    <description xml:lang="zh_CN">运行 Cutefish 系统安装器</description>
+    <message>Installing a system needs the administrator's blessing.</message>
+    <message xml:lang="zh_CN">安装系统需要管理员授权。</message>
+    <defaults>
+      <allow_any>auth_admin_keep</allow_any>
+      <allow_inactive>auth_admin_keep</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/cutefish-installer</annotate>
+    <annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+  </action>
+
+</policyconfig>

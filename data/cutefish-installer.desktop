@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=Install Cutefish OS
+Name[zh_CN]=安装 Cutefish OS
+GenericName=System Installer
+Comment=Install Cutefish OS on this machine
+Comment[zh_CN]=在这台电脑上安装 Cutefish OS
+Exec=cutefish-installer
+Icon=cutefish-installer
+Categories=System;
+Keywords=install;installer;setup;system;
+Terminal=false
+NoDisplay=false
+X-Cutefish-LiveSession=true
+StartupNotify=true
